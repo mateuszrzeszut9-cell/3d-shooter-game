@@ -12,882 +12,434 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
-            overflow: hidden;
-            background: #000;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        canvas {
-            display: block;
-            width: 100vw;
+        #gameContainer {
+            position: relative;
+            width: 100%;
             height: 100vh;
+            background: #000;
+            overflow: hidden;
         }
 
-        /* Main Menu Styles */
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
         #mainMenu {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
-            flex-direction: column;
-        }
-
-        #mainMenu.hidden {
-            display: none;
-        }
-
-        .menu-container {
-            text-align: center;
-            animation: fadeIn 0.6s ease-in;
+            z-index: 10;
+            animation: fadeIn 0.5s ease-in;
         }
 
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: scale(0.9);
             }
             to {
                 opacity: 1;
-                transform: scale(1);
             }
         }
 
-        .game-title {
+        #mainMenu.hidden {
+            display: none;
+            z-index: -1;
+        }
+
+        .menu-content {
+            text-align: center;
+            color: white;
+        }
+
+        h1 {
             font-size: 4em;
-            color: #00d4ff;
-            margin-bottom: 30px;
-            text-shadow: 0 0 20px rgba(0, 212, 255, 0.8);
-            font-weight: bold;
-            letter-spacing: 3px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: pulse 2s ease-in-out infinite;
         }
 
-        .menu-subtitle {
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                transform: scale(1.05);
+                text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        .subtitle {
             font-size: 1.2em;
-            color: #aaa;
             margin-bottom: 50px;
+            color: #00ff88;
         }
 
-        #startButton {
-            padding: 15px 50px;
-            font-size: 1.5em;
-            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-            color: #fff;
-            border: none;
-            border-radius: 5px;
+        button {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: 2px solid #764ba2;
+            border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            margin: 10px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
         }
 
-        #startButton:hover {
-            background: linear-gradient(135deg, #00e6ff 0%, #00aadd 100%);
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.8);
-            transform: scale(1.05);
+        button:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.8);
         }
 
-        #startButton:active {
-            transform: scale(0.98);
+        button:active {
+            transform: scale(0.95);
         }
 
-        /* HUD Styles */
         #hud {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 100;
-        }
-
-        #hud.hidden {
-            display: none;
-        }
-
-        /* Top HUD Bar */
-        .hud-top {
             position: absolute;
             top: 20px;
             left: 20px;
             right: 20px;
-            height: 80px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #00d4ff;
-            border-radius: 5px;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 1.1em;
-            color: #00d4ff;
-            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            z-index: 5;
+            display: none;
         }
 
-        .hud-section {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+        #hud.visible {
+            display: block;
         }
 
-        .hud-label {
-            font-size: 0.8em;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .hud-item {
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
         }
 
-        .hud-value {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #00d4ff;
-        }
-
-        /* Crosshair */
-        .crosshair {
+        #crosshair {
             position: absolute;
+            width: 30px;
+            height: 30px;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            border: 2px solid #00d4ff;
-            border-radius: 50%;
             pointer-events: none;
-        }
-
-        .crosshair::before,
-        .crosshair::after {
-            content: '';
-            position: absolute;
-            background: #00d4ff;
-        }
-
-        .crosshair::before {
-            width: 2px;
-            height: 10px;
-            left: 50%;
-            top: -15px;
-            transform: translateX(-50%);
-        }
-
-        .crosshair::after {
-            width: 2px;
-            height: 10px;
-            left: 50%;
-            bottom: -15px;
-            transform: translateX(-50%);
-        }
-
-        /* Minimap */
-        #minimap {
-            position: fixed;
-            top: 120px;
-            right: 20px;
-            width: 200px;
-            height: 200px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #00d4ff;
-            border-radius: 5px;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-            z-index: 101;
-        }
-
-        #minimapCanvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-            border-radius: 3px;
-        }
-
-        /* Fullscreen Map Button */
-        #fullscreenMapBtn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background: rgba(0, 212, 255, 0.8);
-            border: 2px solid #00d4ff;
-            border-radius: 5px;
-            color: #000;
-            font-size: 1.5em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            pointer-events: auto;
-            z-index: 102;
-        }
-
-        #fullscreenMapBtn:hover {
-            background: rgba(0, 212, 255, 1);
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.8);
-            transform: scale(1.1);
-        }
-
-        /* Fullscreen Map */
-        #fullscreenMap {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
+            z-index: 4;
             display: none;
-            z-index: 999;
+        }
+
+        #crosshair.visible {
+            display: block;
+        }
+
+        .crosshair-line {
+            position: absolute;
+            background: #00ff88;
+        }
+
+        .crosshair-horizontal {
+            width: 20px;
+            height: 2px;
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .crosshair-vertical {
+            width: 2px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translateY(-50%);
+        }
+
+        .crosshair-center {
+            width: 6px;
+            height: 6px;
+            background: #00ff88;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #gameOver {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            z-index: 20;
+            color: white;
+            text-align: center;
         }
 
-        #fullscreenMap.active {
+        #gameOver.visible {
             display: flex;
         }
 
-        #fullscreenMapCanvas {
-            width: 90%;
-            height: 90%;
-            border: 2px solid #00d4ff;
-            background: #0a0a0a;
+        #gameOver h2 {
+            font-size: 3em;
+            margin-bottom: 30px;
+            color: #ff4444;
         }
 
-        .fullscreen-map-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            background: rgba(0, 212, 255, 0.8);
-            border: 2px solid #00d4ff;
-            border-radius: 5px;
-            color: #000;
+        #gameOver p {
             font-size: 1.5em;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .fullscreen-map-close:hover {
-            background: rgba(0, 212, 255, 1);
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.8);
-        }
-
-        /* Stats Panel */
-        .hud-stats {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #00d4ff;
-            border-radius: 5px;
-            padding: 15px;
-            min-width: 200px;
-            color: #00d4ff;
-            font-size: 0.9em;
-            line-height: 1.6;
-        }
-
-        .stats-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid #00d4ff;
-            padding-bottom: 5px;
-        }
-
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 5px 0;
-        }
-
-        .stat-label {
-            color: #888;
-        }
-
-        .stat-value {
-            color: #00ff00;
-            font-weight: bold;
-        }
-
-        /* Ammo Display */
-        .hud-ammo {
-            position: absolute;
-            bottom: 20px;
-            right: 100px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #00d4ff;
-            border-radius: 5px;
-            padding: 15px;
-            text-align: center;
-            color: #00d4ff;
-        }
-
-        .ammo-value {
-            font-size: 2em;
-            font-weight: bold;
-            color: #00ff00;
-            margin: 10px 0;
-        }
-
-        /* Controls Info */
-        .hud-controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #00d4ff;
-            border-radius: 5px;
-            padding: 10px 20px;
-            font-size: 0.8em;
-            color: #888;
-            text-align: center;
-        }
-
-        /* Damage Indicator */
-        .damage-indicator {
-            position: absolute;
-            top: 110px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 100px;
-            border: 3px solid rgba(255, 0, 0, 0.5);
-            border-radius: 50%;
-            pointer-events: none;
-            display: none;
-        }
-
-        .damage-indicator.active {
-            display: block;
-            animation: damageFlash 0.5s ease-out;
-        }
-
-        @keyframes damageFlash {
-            0% {
-                box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.8);
-                border-color: rgba(255, 0, 0, 0.8);
-            }
-            100% {
-                box-shadow: inset 0 0 5px rgba(255, 0, 0, 0.2);
-                border-color: rgba(255, 0, 0, 0.2);
-            }
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <!-- Main Menu -->
-    <div id="mainMenu">
-        <div class="menu-container">
-            <h1 class="game-title">3D SHOOTER</h1>
-            <p class="menu-subtitle">Experience the ultimate FPS adventure</p>
-            <button id="startButton">START GAME</button>
-        </div>
-    </div>
-
-    <!-- Game Canvas -->
-    <canvas id="gameCanvas"></canvas>
-
-    <!-- HUD -->
-    <div id="hud">
-        <!-- Top HUD Bar -->
-        <div class="hud-top">
-            <div class="hud-section">
-                <span class="hud-label">Health</span>
-                <span class="hud-value" id="healthValue">100</span>
-            </div>
-            <div class="hud-section">
-                <span class="hud-label">Location</span>
-                <span class="hud-value" id="locationValue">BASE</span>
-            </div>
-            <div class="hud-section">
-                <span class="hud-label">FPS</span>
-                <span class="hud-value" id="fpsValue">60</span>
-            </div>
-            <div class="hud-section">
-                <span class="hud-label">Enemies</span>
-                <span class="hud-value" id="enemyCount">0</span>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="mainMenu">
+            <div class="menu-content">
+                <h1>3D SHOOTER</h1>
+                <p class="subtitle">Defend yourself and survive!</p>
+                <button id="startBtn">START GAME</button>
+                <button id="instructionsBtn">INSTRUCTIONS</button>
             </div>
         </div>
 
-        <!-- Crosshair -->
-        <div class="crosshair"></div>
-
-        <!-- Damage Indicator -->
-        <div class="damage-indicator"></div>
-
-        <!-- Stats Panel -->
-        <div class="hud-stats">
-            <div class="stats-title">MISSION STATS</div>
-            <div class="stat-row">
-                <span class="stat-label">Kills:</span>
-                <span class="stat-value" id="killCount">0</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">Accuracy:</span>
-                <span class="stat-value" id="accuracy">0%</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">Time:</span>
-                <span class="stat-value" id="playTime">00:00</span>
-            </div>
+        <div id="crosshair">
+            <div class="crosshair-line crosshair-horizontal"></div>
+            <div class="crosshair-line crosshair-vertical"></div>
+            <div class="crosshair-center"></div>
         </div>
 
-        <!-- Ammo Display -->
-        <div class="hud-ammo">
-            <div class="hud-label">AMMO</div>
-            <div class="ammo-value" id="ammoDisplay">120 / 360</div>
+        <div id="hud">
+            <div class="hud-item">Score: <span id="score">0</span></div>
+            <div class="hud-item">Health: <span id="health">100</span></div>
+            <div class="hud-item">Ammo: <span id="ammo">30</span></div>
+            <div class="hud-item">FPS: <span id="fps">60</span></div>
         </div>
 
-        <!-- Controls Info -->
-        <div class="hud-controls">
-            WASD: Move | Mouse: Look | Click: Shoot | Space: Jump | M: Map | F: Fullscreen
+        <div id="gameOver">
+            <h2>GAME OVER</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button id="restartBtn">RESTART GAME</button>
         </div>
-    </div>
-
-    <!-- Minimap -->
-    <canvas id="minimap"></canvas>
-
-    <!-- Fullscreen Map Button -->
-    <button id="fullscreenMapBtn" title="Press M for fullscreen map">🗺️</button>
-
-    <!-- Fullscreen Map -->
-    <div id="fullscreenMap">
-        <div class="fullscreen-map-close" id="fullscreenMapClose">✕</div>
-        <canvas id="fullscreenMapCanvas"></canvas>
     </div>
 
     <script>
-        // Game variables
+        // Game state
+        const gameState = {
+            isRunning: false,
+            isPaused: false,
+            score: 0,
+            health: 100,
+            ammo: 30,
+            maxAmmo: 30
+        };
+
+        // Canvas setup
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const minimapCanvas = document.getElementById('minimap');
-        const minimapCtx = minimapCanvas.getContext('2d');
-        const fullscreenMapCanvas = document.getElementById('fullscreenMapCanvas');
-        const fullscreenMapCtx = fullscreenMapCanvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
 
         // UI Elements
         const mainMenu = document.getElementById('mainMenu');
-        const startButton = document.getElementById('startButton');
+        const gameOverScreen = document.getElementById('gameOver');
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const instructionsBtn = document.getElementById('instructionsBtn');
         const hud = document.getElementById('hud');
-        const fullscreenMap = document.getElementById('fullscreenMap');
-        const fullscreenMapBtn = document.getElementById('fullscreenMapBtn');
-        const fullscreenMapClose = document.getElementById('fullscreenMapClose');
+        const crosshair = document.getElementById('crosshair');
 
-        // Set canvas size
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        minimapCanvas.width = 200;
-        minimapCanvas.height = 200;
-        fullscreenMapCanvas.width = window.innerWidth * 0.9;
-        fullscreenMapCanvas.height = window.innerHeight * 0.9;
+        // Game start function
+        function startGame() {
+            console.log('Game started!');
+            gameState.isRunning = true;
+            gameState.score = 0;
+            gameState.health = 100;
+            gameState.ammo = 30;
 
-        // Game state
-        let gameStarted = false;
-        let gameTime = 0;
-        let kills = 0;
-        let totalShots = 0;
-        let hitShots = 0;
-
-        // Player object
-        const player = {
-            x: 100,
-            y: 100,
-            z: 0,
-            vx: 0,
-            vy: 0,
-            vz: 0,
-            angle: 0,
-            pitch: 0,
-            speed: 5,
-            health: 100,
-            maxHealth: 100,
-            ammo: 120,
-            maxAmmo: 120,
-            ammoReserve: 360,
-            maxAmmoReserve: 360,
-            isGrounded: true
-        };
-
-        // World objects
-        const world = {
-            walls: [
-                { x1: 0, y1: 0, x2: 1000, y2: 0, height: 50 },
-                { x1: 1000, y1: 0, x2: 1000, y2: 1000, height: 50 },
-                { x1: 1000, y1: 1000, x2: 0, y2: 1000, height: 50 },
-                { x1: 0, y1: 1000, x2: 0, y2: 0, height: 50 },
-                { x1: 200, y1: 200, x2: 400, y2: 200, height: 40 },
-                { x1: 600, y1: 300, x2: 800, y2: 300, height: 40 }
-            ],
-            objects: [
-                { x: 200, y: 200, size: 30, type: 'box' },
-                { x: 600, y: 300, size: 40, type: 'cylinder' },
-                { x: 400, y: 600, size: 25, type: 'box' }
-            ]
-        };
-
-        // Enemies
-        let enemies = [
-            { x: 300, y: 300, health: 50, maxHealth: 50, size: 20 },
-            { x: 700, y: 700, health: 50, maxHealth: 50, size: 20 },
-            { x: 500, y: 500, health: 50, maxHealth: 50, size: 20 }
-        ];
-
-        // Input handling
-        const keys = {};
-        const mouse = { x: 0, y: 0, down: false };
-
-        window.addEventListener('keydown', (e) => {
-            keys[e.key.toLowerCase()] = true;
-            if (e.key.toLowerCase() === 'm') toggleFullscreenMap();
-            if (e.key.toLowerCase() === 'f') canvas.requestFullscreen();
-        });
-
-        window.addEventListener('keyup', (e) => {
-            keys[e.key.toLowerCase()] = false;
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-            
-            // Update player angle based on mouse position
-            if (gameStarted) {
-                const centerX = canvas.width / 2;
-                const deltaX = e.clientX - centerX;
-                player.angle = Math.atan2(deltaX, 500);
-            }
-        });
-
-        window.addEventListener('mousedown', () => {
-            mouse.down = true;
-            if (gameStarted) handleShoot();
-        });
-
-        window.addEventListener('mouseup', () => {
-            mouse.down = false;
-        });
-
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            fullscreenMapCanvas.width = window.innerWidth * 0.9;
-            fullscreenMapCanvas.height = window.innerHeight * 0.9;
-        });
-
-        // Start button click handler
-        startButton.addEventListener('click', () => {
-            gameStarted = true;
             mainMenu.classList.add('hidden');
-            hud.classList.remove('hidden');
-            gameTime = 0;
-        });
+            gameOverScreen.classList.remove('visible');
+            hud.classList.add('visible');
+            crosshair.classList.add('visible');
 
-        // Fullscreen map controls
-        fullscreenMapBtn.addEventListener('click', toggleFullscreenMap);
-        fullscreenMapClose.addEventListener('click', toggleFullscreenMap);
-
-        function toggleFullscreenMap() {
-            if (gameStarted) {
-                fullscreenMap.classList.toggle('active');
-            }
+            updateHUD();
+            gameLoop();
         }
 
-        // Handle shooting
-        function handleShoot() {
-            if (player.ammo <= 0) return;
-
-            player.ammo--;
-            totalShots++;
-
-            // Check for hits
-            enemies.forEach(enemy => {
-                const dx = enemy.x - player.x;
-                const dy = enemy.y - player.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                
-                if (dist < 100 && Math.random() > 0.5) {
-                    enemy.health -= 10;
-                    hitShots++;
-                    
-                    if (enemy.health <= 0) {
-                        kills++;
-                        enemy.health = 50;
-                        enemy.x = Math.random() * 1000;
-                        enemy.y = Math.random() * 1000;
-                    }
-                }
-            });
-
-            // Show damage indicator
-            document.querySelector('.damage-indicator').classList.add('active');
-            setTimeout(() => {
-                document.querySelector('.damage-indicator').classList.remove('active');
-            }, 500);
+        // Game over function
+        function gameOverState() {
+            gameState.isRunning = false;
+            document.getElementById('finalScore').textContent = gameState.score;
+            gameOverScreen.classList.add('visible');
+            hud.classList.remove('visible');
+            crosshair.classList.remove('visible');
         }
 
-        // Update game state
-        function update() {
-            if (!gameStarted) return;
-
-            // Update time
-            gameTime += 1/60;
-
-            // Player movement
-            const moveSpeed = 3;
-            if (keys['w']) {
-                player.x += Math.cos(player.angle) * moveSpeed;
-                player.y += Math.sin(player.angle) * moveSpeed;
-            }
-            if (keys['s']) {
-                player.x -= Math.cos(player.angle) * moveSpeed;
-                player.y -= Math.sin(player.angle) * moveSpeed;
-            }
-            if (keys['a']) {
-                player.x -= Math.cos(player.angle + Math.PI / 2) * moveSpeed;
-                player.y -= Math.sin(player.angle + Math.PI / 2) * moveSpeed;
-            }
-            if (keys['d']) {
-                player.x += Math.cos(player.angle + Math.PI / 2) * moveSpeed;
-                player.y += Math.sin(player.angle + Math.PI / 2) * moveSpeed;
-            }
-
-            // Clamp player position
-            player.x = Math.max(0, Math.min(1000, player.x));
-            player.y = Math.max(0, Math.min(1000, player.y));
-
-            // Update HUD
-            document.getElementById('healthValue').textContent = Math.max(0, player.health);
-            document.getElementById('fpsValue').textContent = Math.round(1000 / 16.67);
-            document.getElementById('killCount').textContent = kills;
-            document.getElementById('ammoDisplay').textContent = `${player.ammo} / ${player.ammoReserve}`;
-            document.getElementById('accuracy').textContent = totalShots > 0 ? Math.round((hitShots / totalShots) * 100) + '%' : '0%';
-            document.getElementById('playTime').textContent = formatTime(gameTime);
-            document.getElementById('enemyCount').textContent = enemies.length;
-            document.getElementById('locationValue').textContent = getLocationName(player.x, player.y);
+        // Restart function
+        function restartGame() {
+            startGame();
         }
 
-        function getLocationName(x, y) {
-            if (x < 300 && y < 300) return 'NW ZONE';
-            if (x > 700 && y < 300) return 'NE ZONE';
-            if (x < 300 && y > 700) return 'SW ZONE';
-            if (x > 700 && y > 700) return 'SE ZONE';
-            return 'CENTER';
-        }
-
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        }
-
-        // Render game
-        function render() {
-            // Clear canvas
-            ctx.fillStyle = '#0a0a0a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            if (gameStarted) {
-                renderGame();
-                renderMinimap();
-                if (fullscreenMap.classList.contains('active')) {
-                    renderFullscreenMap();
-                }
-            }
-        }
-
-        function renderGame() {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            // Draw sky
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#1a4d66');
-            gradient.addColorStop(1, '#0d2633');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw ground
-            ctx.fillStyle = '#1a1a1a';
-            ctx.fillRect(0, centerY, canvas.width, canvas.height / 2);
-
-            // Draw world objects
-            ctx.fillStyle = '#00d4ff';
-            ctx.strokeStyle = '#00d4ff';
-            ctx.lineWidth = 2;
-
-            enemies.forEach(enemy => {
-                const dx = enemy.x - player.x;
-                const dy = enemy.y - player.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < 500) {
-                    const screenX = centerX + (dx * 50) / Math.max(dist, 1);
-                    const screenY = centerY + (dy * 50) / Math.max(dist, 1);
-                    const size = Math.max(5, 100 / Math.max(dist, 1));
-
-                    // Draw enemy
-                    ctx.fillStyle = dist < 100 ? '#ff3333' : '#ff9900';
-                    ctx.fillRect(screenX - size / 2, screenY - size / 2, size, size);
-
-                    // Draw health bar
-                    ctx.fillStyle = '#00ff00';
-                    ctx.fillRect(screenX - size / 2, screenY - size / 2 - 10, (size * enemy.health) / enemy.maxHealth, 5);
-                    ctx.strokeStyle = '#00d4ff';
-                    ctx.strokeRect(screenX - size / 2, screenY - size / 2 - 10, size, 5);
-                }
-            });
-
-            // Draw some terrain features
-            ctx.fillStyle = 'rgba(0, 100, 150, 0.3)';
-            ctx.fillRect(centerX - 100, centerY - 50, 200, 100);
-            
-            ctx.fillStyle = 'rgba(100, 100, 100, 0.3)';
-            ctx.beginPath();
-            ctx.arc(centerX + 150, centerY - 100, 50, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function renderMinimap() {
-            minimapCtx.fillStyle = '#000000';
-            minimapCtx.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height);
-
-            const scale = minimapCanvas.width / 1000;
-
-            // Draw walls
-            minimapCtx.strokeStyle = '#00d4ff';
-            minimapCtx.lineWidth = 2;
-            world.walls.forEach(wall => {
-                minimapCtx.beginPath();
-                minimapCtx.moveTo(wall.x1 * scale, wall.y1 * scale);
-                minimapCtx.lineTo(wall.x2 * scale, wall.y2 * scale);
-                minimapCtx.stroke();
-            });
-
-            // Draw objects
-            minimapCtx.fillStyle = '#0088ff';
-            world.objects.forEach(obj => {
-                minimapCtx.fillRect(obj.x * scale - 5, obj.y * scale - 5, 10, 10);
-            });
-
-            // Draw enemies
-            minimapCtx.fillStyle = '#ff3333';
-            enemies.forEach(enemy => {
-                minimapCtx.beginPath();
-                minimapCtx.arc(enemy.x * scale, enemy.y * scale, 4, 0, Math.PI * 2);
-                minimapCtx.fill();
-            });
-
-            // Draw player
-            minimapCtx.fillStyle = '#00ff00';
-            minimapCtx.beginPath();
-            minimapCtx.arc(player.x * scale, player.y * scale, 5, 0, Math.PI * 2);
-            minimapCtx.fill();
-
-            // Draw player direction
-            minimapCtx.strokeStyle = '#00ff00';
-            minimapCtx.lineWidth = 2;
-            minimapCtx.beginPath();
-            minimapCtx.moveTo(player.x * scale, player.y * scale);
-            minimapCtx.lineTo(
-                player.x * scale + Math.cos(player.angle) * 20,
-                player.y * scale + Math.sin(player.angle) * 20
-            );
-            minimapCtx.stroke();
-        }
-
-        function renderFullscreenMap() {
-            const width = fullscreenMapCanvas.width;
-            const height = fullscreenMapCanvas.height;
-            const scale = Math.min(width, height) / 1000;
-
-            fullscreenMapCtx.fillStyle = '#0a0a0a';
-            fullscreenMapCtx.fillRect(0, 0, width, height);
-
-            // Draw grid
-            fullscreenMapCtx.strokeStyle = 'rgba(0, 212, 255, 0.2)';
-            fullscreenMapCtx.lineWidth = 1;
-            for (let i = 0; i <= 1000; i += 100) {
-                fullscreenMapCtx.beginPath();
-                fullscreenMapCtx.moveTo(i * scale, 0);
-                fullscreenMapCtx.lineTo(i * scale, height);
-                fullscreenMapCtx.stroke();
-
-                fullscreenMapCtx.beginPath();
-                fullscreenMapCtx.moveTo(0, i * scale);
-                fullscreenMapCtx.lineTo(width, i * scale);
-                fullscreenMapCtx.stroke();
-            }
-
-            // Draw walls
-            fullscreenMapCtx.strokeStyle = '#00d4ff';
-            fullscreenMapCtx.lineWidth = 3;
-            world.walls.forEach(wall => {
-                fullscreenMapCtx.beginPath();
-                fullscreenMapCtx.moveTo(wall.x1 * scale, wall.y1 * scale);
-                fullscreenMapCtx.lineTo(wall.x2 * scale, wall.y2 * scale);
-                fullscreenMapCtx.stroke();
-            });
-
-            // Draw objects
-            fullscreenMapCtx.fillStyle = '#0088ff';
-            world.objects.forEach(obj => {
-                fullscreenMapCtx.fillRect(obj.x * scale - 10, obj.y * scale - 10, 20, 20);
-            });
-
-            // Draw enemies
-            fullscreenMapCtx.fillStyle = '#ff3333';
-            enemies.forEach(enemy => {
-                fullscreenMapCtx.beginPath();
-                fullscreenMapCtx.arc(enemy.x * scale, enemy.y * scale, 8, 0, Math.PI * 2);
-                fullscreenMapCtx.fill();
-            });
-
-            // Draw player
-            fullscreenMapCtx.fillStyle = '#00ff00';
-            fullscreenMapCtx.beginPath();
-            fullscreenMapCtx.arc(player.x * scale, player.y * scale, 10, 0, Math.PI * 2);
-            fullscreenMapCtx.fill();
-
-            // Draw player direction
-            fullscreenMapCtx.strokeStyle = '#00ff00';
-            fullscreenMapCtx.lineWidth = 2;
-            fullscreenMapCtx.beginPath();
-            fullscreenMapCtx.moveTo(player.x * scale, player.y * scale);
-            fullscreenMapCtx.lineTo(
-                player.x * scale + Math.cos(player.angle) * 50,
-                player.y * scale + Math.sin(player.angle) * 50
-            );
-            fullscreenMapCtx.stroke();
+        // Update HUD
+        function updateHUD() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('health').textContent = gameState.health;
+            document.getElementById('ammo').textContent = gameState.ammo;
         }
 
         // Game loop
+        let lastTime = Date.now();
+        let frameCount = 0;
+        let fpsUpdateTime = 0;
+
         function gameLoop() {
-            update();
-            render();
-            requestAnimationFrame(gameLoop);
+            const currentTime = Date.now();
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            // Clear canvas
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (gameState.isRunning) {
+                // Draw game scene (placeholder)
+                drawGameScene();
+
+                // Update game logic
+                updateGame(deltaTime);
+
+                // Update HUD
+                updateHUD();
+
+                // FPS Counter
+                frameCount++;
+                fpsUpdateTime += deltaTime;
+                if (fpsUpdateTime >= 1) {
+                    document.getElementById('fps').textContent = frameCount;
+                    frameCount = 0;
+                    fpsUpdateTime = 0;
+                }
+
+                requestAnimationFrame(gameLoop);
+            }
         }
 
-        gameLoop();
+        function drawGameScene() {
+            // Draw a simple 3D-like scene for now
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
 
-        // Initial render
-        render();
+            ctx.fillStyle = '#0f3460';
+            ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+
+            // Draw some grid lines to simulate 3D perspective
+            ctx.strokeStyle = 'rgba(0, 255, 136, 0.2)';
+            ctx.lineWidth = 1;
+
+            const gridSize = 50;
+            for (let i = 0; i < canvas.width; i += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(i, canvas.height / 2);
+                ctx.lineTo(i + canvas.height / 4, canvas.height);
+                ctx.stroke();
+            }
+
+            // Draw horizon line
+            ctx.strokeStyle = 'rgba(0, 255, 136, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+
+            // Draw some random enemies (simple circles for now)
+            ctx.fillStyle = 'rgba(255, 50, 50, 0.7)';
+            for (let i = 0; i < 3; i++) {
+                const x = Math.sin(Date.now() / 1000 + i) * 100 + canvas.width / 2;
+                const y = Math.cos(Date.now() / 1500 + i) * 50 + canvas.height / 3;
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function updateGame(deltaTime) {
+            // Placeholder for game logic
+            // Example: decrease health over time for demo
+            if (gameState.health <= 0) {
+                gameOverState();
+            }
+        }
+
+        // Mouse click for shooting
+        document.addEventListener('click', () => {
+            if (gameState.isRunning && gameState.ammo > 0) {
+                gameState.ammo--;
+                gameState.score += 10;
+                console.log('Shot fired! Ammo: ' + gameState.ammo);
+            }
+        });
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (gameState.isRunning) {
+                if (e.key === 'r' || e.key === 'R') {
+                    gameState.ammo = gameState.maxAmmo;
+                    console.log('Reloaded!');
+                }
+                if (e.key === 'Escape') {
+                    gameState.isPaused = !gameState.isPaused;
+                    console.log('Paused: ' + gameState.isPaused);
+                }
+            }
+        });
+
+        // Button event listeners
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', restartGame);
+        instructionsBtn.addEventListener('click', () => {
+            alert('3D SHOOTER GAME\n\nControls:\n' +
+                'Left Click: Shoot\n' +
+                'R: Reload\n' +
+                'ESC: Pause\n\n' +
+                'Destroy enemies and survive as long as possible!\n' +
+                'Good luck!');
+        });
+
+        // Initial HUD update
+        updateHUD();
     </script>
 </body>
 </html>
