@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Shooter Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100vh;
+        }
+
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        #healthBar {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 200px;
+            height: 30px;
+            border: 2px solid #00ff00;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        #healthFill {
+            height: 100%;
+            width: 100%;
+            background-color: #00ff00;
+            transition: width 0.2s ease;
+        }
+
+        #ammoDisplay {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            font-size: 24px;
+            border: 2px solid #00ff00;
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            border: 2px solid #00ff00;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        #crosshair::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 8px;
+            background-color: #00ff00;
+        }
+
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 2px;
+            background-color: #00ff00;
+        }
+
+        #scoreDisplay {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-size: 20px;
+            border: 2px solid #00ff00;
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        #fpsDisplay {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            font-size: 16px;
+            border: 2px solid #00ff00;
+            padding: 10px 15px;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        #gameOverScreen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 3px solid #00ff00;
+            padding: 40px;
+            text-align: center;
+            z-index: 100;
+            min-width: 400px;
+        }
+
+        #gameOverScreen h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ff0000;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+        }
+
+        #gameOverScreen p {
+            font-size: 24px;
+            margin: 10px 0;
+            color: #00ff00;
+        }
+
+        #gameOverScreen button {
+            margin-top: 30px;
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        #gameOverScreen button:hover {
+            background-color: #00cc00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+        }
+
+        #instructionsScreen {
+            display: flex;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.95);
+            border: 3px solid #00ff00;
+            padding: 40px;
+            text-align: center;
+            z-index: 100;
+            min-width: 500px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #instructionsScreen h1 {
+            font-size: 42px;
+            margin-bottom: 30px;
+            color: #00ff00;
+            text-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+        }
+
+        #instructionsScreen p {
+            font-size: 18px;
+            margin: 15px 0;
+            color: #00ff00;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        #instructionsScreen button {
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 20px;
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        #instructionsScreen button:hover {
+            background-color: #00cc00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div id="hud">
+        <div id="fpsDisplay">FPS: 0</div>
+        <div id="scoreDisplay">Score: 0</div>
+        <div id="crosshair"></div>
+        <div id="healthBar">
+            <div id="healthFill"></div>
+        </div>
+        <div id="ammoDisplay">Ammo: 30/120</div>
+    </div>
+
+    <div id="instructionsScreen">
+        <h1>3D SHOOTER GAME</h1>
+        <p><strong>Controls:</strong></p>
+        <p>WASD - Move around</p>
+        <p>Mouse - Look around</p>
+        <p>Left Click - Shoot</p>
+        <p>Space - Jump</p>
+        <p>R - Reload</p>
+        <p>ESC - Pause Game</p>
+        <p style="margin-top: 30px; color: #ffff00;">Destroy all enemies to win!</p>
+        <button onclick="startGame()">Start Game</button>
+    </div>
+
+    <div id="gameOverScreen">
+        <h1>GAME OVER</h1>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <p>Enemies Destroyed: <span id="enemiesKilled">0</span></p>
+        <button onclick="restartGame()">Restart Game</button>
+    </div>
+
+    <!-- Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Game scripts -->
+    <script src="js/game.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/enemy.js"></script>
+    <script src="js/weapon.js"></script>
+    <script src="js/utils.js"></script>
+
+    <script>
+        function startGame() {
+            document.getElementById('instructionsScreen').style.display = 'none';
+            initGame();
+        }
+
+        function restartGame() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
