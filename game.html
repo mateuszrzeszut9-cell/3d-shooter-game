@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Shooter Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
+            font-family: Arial, sans-serif;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            font-size: 16px;
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        .hud-top-left {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .hud-top-right {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            text-align: right;
+        }
+
+        .hud-bottom-left {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .hud-bottom-center {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 2px solid #0f0;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #0f0;
+            z-index: 100;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-size: 48px;
+            color: #f00;
+            text-shadow: 0 0 20px #f00;
+            z-index: 200;
+            display: none;
+        }
+
+        .game-over h1 {
+            margin-bottom: 20px;
+        }
+
+        .game-over p {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        .game-over button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background: #0f0;
+            color: #000;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .game-over button:hover {
+            background: #0a0;
+        }
+
+        #stats {
+            font-size: 14px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="hud">
+        <div class="crosshair"></div>
+        
+        <div class="hud-top-left">
+            <div id="stats">
+                <div>Health: <span id="health">100</span></div>
+                <div>Ammo: <span id="ammo">30</span></div>
+                <div>Score: <span id="score">0</span></div>
+            </div>
+        </div>
+        
+        <div class="hud-top-right">
+            <div>FPS: <span id="fps">60</span></div>
+            <div>Enemies: <span id="enemyCount">0</span></div>
+        </div>
+        
+        <div class="hud-bottom-left">
+            <div id="weapons">Weapon: <span id="weaponName">Rifle</span></div>
+        </div>
+        
+        <div class="hud-bottom-center">
+            <div id="instructions">WASD: Move | Mouse: Look | Click: Shoot | R: Reload | P: Pause</div>
+        </div>
+        
+        <div class="game-over" id="gameOverScreen">
+            <h1>GAME OVER</h1>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <p>Enemies Defeated: <span id="enemiesDefeated">0</span></p>
+            <button onclick="location.reload()">Restart Game</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GAME CONFIGURATION ====================
+        const CONFIG = {
+            CANVAS_WIDTH: window.innerWidth,
+            CANVAS_HEIGHT: window.innerHeight,
+            FOV: 60,
+            DRAW_DISTANCE: 5000,
+            PLAYER_SPEED: 0.3,
+            PLAYER_HEALTH: 100,
+            PLAYER_ROTATION_SPEED: 0.05,
+            ENEMY_COUNT: 5,
+            ENEMY_SPEED: 0.1,
+            ENEMY_HEALTH: 30,
+            ENEMY_DAMAGE: 10,
+            WEAPON_DAMAGE: 25,
+            WEAPON_FIRE_RATE: 100,
+            AMMO_MAX: 120,
+            AMMO_PER_CLIP: 30
+        };
+
+        // ==================== VECTOR3 CLASS ====================
+        class Vector3 {
+            constructor(x = 0, y = 0, z = 0) {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+            }
+
+            add(v) {
+                return new Vector3(this.x + v.x, this.y + v.y, this.z + v.z);
+            }
+
+            subtract(v) {
+                return new Vector3(this.x - v.x, this.y - v.y, this.z - v.z);
+            }
+
+            multiply(s) {
+                return new Vector3(this.x * s, this.y * s, this.z * s);
+            }
+
+            distance(v) {
+                const dx = this.x - v.x;
+                const dy = this.y - v.y;
+                const dz = this.z - v.z;
+                return Math.sqrt(dx * dx + dy * dy + dz * dz);
+            }
+
+            length() {
+                return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+            }
+
+            normalize() {
+                const len = this.length();
+                if (len > 0) {
+                    return new Vector3(this.x / len, this.y / len, this.z / len);
+                }
+                return new Vector3(0, 0, 0);
+            }
+
+            copy() {
+                return new Vector3(this.x, this.y, this.z);
+            }
+        }
+
+        // ==================== PLAYER CLASS ====================
+        class Player {
+            constructor() {
+                this.position = new Vector3(0, 0, 0);
+                this.rotation = { x: 0, y: 0 };
+                this.health = CONFIG.PLAYER_HEALTH;
+                this.maxHealth = CONFIG.PLAYER_HEALTH;
+                this.ammo = CONFIG.AMMO_MAX;
+                this.maxAmmo = CONFIG.AMMO_MAX;
+                this.ammoPerClip = CONFIG.AMMO_PER_CLIP;
+                this.score = 0;
+                this.lastShotTime = 0;
+                this.moveDirection = { forward: false, backward: false, left: false, right: false };
+            }
+
+            update(deltaTime) {
+                const moveSpeed = CONFIG.PLAYER_SPEED;
+                const cosY = Math.cos(this.rotation.y);
+                const sinY = Math.sin(this.rotation.y);
+
+                if (this.moveDirection.forward) {
+                    this.position.x += cosY * moveSpeed;
+                    this.position.z += sinY * moveSpeed;
+                }
+                if (this.moveDirection.backward) {
+                    this.position.x -= cosY * moveSpeed;
+                    this.position.z -= sinY * moveSpeed;
+                }
+                if (this.moveDirection.left) {
+                    this.position.x -= sinY * moveSpeed;
+                    this.position.z += cosY * moveSpeed;
+                }
+                if (this.moveDirection.right) {
+                    this.position.x += sinY * moveSpeed;
+                    this.position.z -= cosY * moveSpeed;
+                }
+            }
+
+            canShoot() {
+                return Date.now() - this.lastShotTime > CONFIG.WEAPON_FIRE_RATE && this.ammo > 0;
+            }
+
+            shoot() {
+                if (this.canShoot()) {
+                    this.lastShotTime = Date.now();
+                    this.ammo--;
+                    return true;
+                }
+                return false;
+            }
+
+            reload() {
+                this.ammo = this.maxAmmo;
+            }
+
+            takeDamage(damage) {
+                this.health = Math.max(0, this.health - damage);
+            }
+
+            addScore(points) {
+                this.score += points;
+            }
+
+            isAlive() {
+                return this.health > 0;
+            }
+        }
+
+        // ==================== PROJECTILE CLASS ====================
+        class Projectile {
+            constructor(position, direction) {
+                this.position = position.copy();
+                this.direction = direction.normalize();
+                this.speed = 1.0;
+                this.lifeTime = 5000;
+                this.creationTime = Date.now();
+                this.damage = CONFIG.WEAPON_DAMAGE;
+            }
+
+            update(deltaTime) {
+                const movement = this.direction.multiply(this.speed);
+                this.position = this.position.add(movement);
+            }
+
+            isExpired() {
+                return Date.now() - this.creationTime > this.lifeTime;
+            }
+
+            getDistance(point) {
+                return this.position.distance(point);
+            }
+        }
+
+        // ==================== ENEMY CLASS ====================
+        class Enemy {
+            constructor(position) {
+                this.position = new Vector3(position.x, position.y, position.z);
+                this.health = CONFIG.ENEMY_HEALTH;
+                this.maxHealth = CONFIG.ENEMY_HEALTH;
+                this.speed = CONFIG.ENEMY_SPEED;
+                this.damage = CONFIG.ENEMY_DAMAGE;
+                this.lastAttackTime = 0;
+                this.attackCooldown = 1000;
+                this.size = 30;
+                this.color = { r: 255, g: 0, b: 0 };
+            }
+
+            update(playerPos, deltaTime) {
+                const dirToPlayer = playerPos.subtract(this.position).normalize();
+                const movement = dirToPlayer.multiply(this.speed);
+                this.position = this.position.add(movement);
+            }
+
+            takeDamage(damage) {
+                this.health = Math.max(0, this.health - damage);
+            }
+
+            canAttack() {
+                return Date.now() - this.lastAttackTime > this.attackCooldown;
+            }
+
+            attack() {
+                if (this.canAttack()) {
+                    this.lastAttackTime = Date.now();
+                    return this.damage;
+                }
+                return 0;
+            }
+
+            isAlive() {
+                return this.health > 0;
+            }
+
+            getDistanceTo(point) {
+                return this.position.distance(point);
+            }
+        }
+
+        // ==================== GAME CLASS ====================
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.canvas.width = CONFIG.CANVAS_WIDTH;
+                this.canvas.height = CONFIG.CANVAS_HEIGHT;
+
+                this.player = new Player();
+                this.enemies = [];
+                this.projectiles = [];
+                this.isPaused = false;
+                this.gameOver = false;
+                this.lastTime = Date.now();
+                this.frameCount = 0;
+                this.fps = 60;
+                this.fpsUpdateTime = Date.now();
+
+                this.initGame();
+                this.setupEventListeners();
+                this.gameLoop();
+            }
+
+            initGame() {
+                for (let i = 0; i < CONFIG.ENEMY_COUNT; i++) {
+                    const angle = (i / CONFIG.ENEMY_COUNT) * Math.PI * 2;
+                    const distance = 300 + Math.random() * 200;
+                    const x = Math.cos(angle) * distance;
+                    const z = Math.sin(angle) * distance;
+                    this.enemies.push(new Enemy(new Vector3(x, 0, z)));
+                }
+            }
+
+            setupEventListeners() {
+                // Mouse movement for camera
+                document.addEventListener('mousemove', (e) => {
+                    if (!this.gameOver && !this.isPaused) {
+                        this.player.rotation.y += e.movementX * CONFIG.PLAYER_ROTATION_SPEED * 0.01;
+                        this.player.rotation.x += e.movementY * CONFIG.PLAYER_ROTATION_SPEED * 0.01;
+                        this.player.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.player.rotation.x));
+                    }
+                });
+
+                // Pointer lock
+                this.canvas.addEventListener('click', () => {
+                    this.canvas.requestPointerLock = this.canvas.requestPointerLock || this.canvas.mozRequestPointerLock;
+                    this.canvas.requestPointerLock();
+                });
+
+                // Keyboard input
+                document.addEventListener('keydown', (e) => {
+                    switch (e.key.toLowerCase()) {
+                        case 'w':
+                            this.player.moveDirection.forward = true;
+                            break;
+                        case 'a':
+                            this.player.moveDirection.left = true;
+                            break;
+                        case 's':
+                            this.player.moveDirection.backward = true;
+                            break;
+                        case 'd':
+                            this.player.moveDirection.right = true;
+                            break;
+                        case 'r':
+                            this.player.reload();
+                            break;
+                        case 'p':
+                            this.isPaused = !this.isPaused;
+                            break;
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    switch (e.key.toLowerCase()) {
+                        case 'w':
+                            this.player.moveDirection.forward = false;
+                            break;
+                        case 'a':
+                            this.player.moveDirection.left = false;
+                            break;
+                        case 's':
+                            this.player.moveDirection.backward = false;
+                            break;
+                        case 'd':
+                            this.player.moveDirection.right = false;
+                            break;
+                    }
+                });
+
+                // Mouse click for shooting
+                document.addEventListener('mousedown', () => {
+                    if (!this.gameOver && !this.isPaused && this.player.shoot()) {
+                        this.fireWeapon();
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    // Stop continuous fire
+                });
+            }
+
+            fireWeapon() {
+                const cosX = Math.cos(this.player.rotation.x);
+                const sinX = Math.sin(this.player.rotation.x);
+                const cosY = Math.cos(this.player.rotation.y);
+                const sinY = Math.sin(this.player.rotation.y);
+
+                const direction = new Vector3(
+                    sinY * cosX,
+                    sinX,
+                    cosY * cosX
+                );
+
+                const projectile = new Projectile(this.player.position, direction);
+                this.projectiles.push(projectile);
+            }
+
+            update(deltaTime) {
+                if (this.isPaused || this.gameOver) return;
+
+                this.player.update(deltaTime);
+
+                // Update projectiles
+                this.projectiles = this.projectiles.filter(p => !p.isExpired());
+                this.projectiles.forEach(p => p.update(deltaTime));
+
+                // Update enemies
+                this.enemies.forEach(enemy => {
+                    if (enemy.isAlive()) {
+                        enemy.update(this.player.position, deltaTime);
+
+                        // Check distance for attack
+                        const distToPlayer = enemy.getDistanceTo(this.player.position);
+                        if (distToPlayer < 150) {
+                            const damage = enemy.attack();
+                            if (damage > 0) {
+                                this.player.takeDamage(damage);
+                            }
+                        }
+                    }
+                });
+
+                // Check projectile-enemy collisions
+                this.projectiles.forEach(projectile => {
+                    this.enemies.forEach(enemy => {
+                        if (enemy.isAlive()) {
+                            const dist = projectile.getDistance(enemy.position);
+                            if (dist < 40) {
+                                enemy.takeDamage(projectile.damage);
+                                const index = this.projectiles.indexOf(projectile);
+                                if (index > -1) {
+                                    this.projectiles.splice(index, 1);
+                                }
+
+                                if (!enemy.isAlive()) {
+                                    this.player.addScore(100);
+                                }
+                            }
+                        }
+                    });
+                });
+
+                // Check game over
+                if (!this.player.isAlive()) {
+                    this.gameOver = true;
+                    this.showGameOver();
+                }
+
+                // Spawn new enemies if all are defeated
+                const aliveEnemies = this.enemies.filter(e => e.isAlive()).length;
+                if (aliveEnemies === 0) {
+                    for (let i = 0; i < CONFIG.ENEMY_COUNT + Math.floor(this.player.score / 500); i++) {
+                        const angle = (i / CONFIG.ENEMY_COUNT) * Math.PI * 2;
+                        const distance = 400 + Math.random() * 300;
+                        const x = Math.cos(angle) * distance;
+                        const z = Math.sin(angle) * distance;
+                        this.enemies.push(new Enemy(new Vector3(x, 0, z)));
+                    }
+                }
+            }
+
+            render() {
+                // Clear canvas
+                this.ctx.fillStyle = '#000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Simple skybox effect
+                this.ctx.fillStyle = '#111';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height / 2);
+                this.ctx.fillStyle = '#333';
+                this.ctx.fillRect(0, this.canvas.height / 2, this.canvas.width, this.canvas.height / 2);
+
+                // Render enemies (simple projection)
+                const sortedEnemies = [...this.enemies].sort((a, b) => {
+                    const distA = a.getDistanceTo(this.player.position);
+                    const distB = b.getDistanceTo(this.player.position);
+                    return distB - distA; // Back to front
+                });
+
+                sortedEnemies.forEach(enemy => {
+                    if (enemy.isAlive()) {
+                        this.renderEntity(enemy);
+                    }
+                });
+
+                // Render projectiles
+                this.projectiles.forEach(projectile => {
+                    this.renderProjectile(projectile);
+                });
+            }
+
+            renderEntity(entity) {
+                const relPos = entity.position.subtract(this.player.position);
+                
+                // Simple perspective projection
+                const rotX = this.player.rotation.x;
+                const rotY = this.player.rotation.y;
+
+                let x = relPos.x;
+                let y = relPos.y;
+                let z = relPos.z;
+
+                // Rotate around Y axis
+                let x1 = x * Math.cos(rotY) + z * Math.sin(rotY);
+                let z1 = -x * Math.sin(rotY) + z * Math.cos(rotY);
+
+                // Rotate around X axis
+                let y1 = y * Math.cos(rotX) - z1 * Math.sin(rotX);
+                let z2 = y * Math.sin(rotX) + z1 * Math.cos(rotX);
+
+                if (z2 > 1) {
+                    const scale = CONFIG.CANVAS_HEIGHT / (2 * Math.tan(CONFIG.FOV * Math.PI / 360));
+                    const screenX = CONFIG.CANVAS_WIDTH / 2 + (x1 / z2) * scale;
+                    const screenY = CONFIG.CANVAS_HEIGHT / 2 - (y1 / z2) * scale;
+
+                    const size = (entity.size / z2) * scale;
+                    const alpha = Math.max(0.3, 1 - z2 / CONFIG.DRAW_DISTANCE);
+
+                    // Draw enemy
+                    this.ctx.fillStyle = `rgba(${entity.color.r}, ${entity.color.g}, ${entity.color.b}, ${alpha})`;
+                    this.ctx.fillRect(screenX - size / 2, screenY - size / 2, size, size);
+
+                    // Draw health bar
+                    if (entity.health < entity.maxHealth) {
+                        this.ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                        this.ctx.fillRect(screenX - size / 2, screenY - size / 2 - 20, size, 5);
+                        const healthPercent = entity.health / entity.maxHealth;
+                        this.ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+                        this.ctx.fillRect(screenX - size / 2, screenY - size / 2 - 20, size * healthPercent, 5);
+                    }
+
+                    // Draw outline
+                    this.ctx.strokeStyle = `rgba(${entity.color.r}, ${entity.color.g}, ${entity.color.b}, ${alpha})`;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeRect(screenX - size / 2, screenY - size / 2, size, size);
+                }
+            }
+
+            renderProjectile(projectile) {
+                const relPos = projectile.position.subtract(this.player.position);
+                const rotX = this.player.rotation.x;
+                const rotY = this.player.rotation.y;
+
+                let x = relPos.x;
+                let y = relPos.y;
+                let z = relPos.z;
+
+                let x1 = x * Math.cos(rotY) + z * Math.sin(rotY);
+                let z1 = -x * Math.sin(rotY) + z * Math.cos(rotY);
+
+                let y1 = y * Math.cos(rotX) - z1 * Math.sin(rotX);
+                let z2 = y * Math.sin(rotX) + z1 * Math.cos(rotX);
+
+                if (z2 > 1) {
+                    const scale = CONFIG.CANVAS_HEIGHT / (2 * Math.tan(CONFIG.FOV * Math.PI / 360));
+                    const screenX = CONFIG.CANVAS_WIDTH / 2 + (x1 / z2) * scale;
+                    const screenY = CONFIG.CANVAS_HEIGHT / 2 - (y1 / z2) * scale;
+
+                    this.ctx.fillStyle = '#0f0';
+                    this.ctx.beginPath();
+                    this.ctx.arc(screenX, screenY, 3, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            }
+
+            updateHUD() {
+                document.getElementById('health').textContent = Math.max(0, Math.floor(this.player.health));
+                document.getElementById('ammo').textContent = this.player.ammo;
+                document.getElementById('score').textContent = this.player.score;
+                document.getElementById('enemyCount').textContent = this.enemies.filter(e => e.isAlive()).length;
+                document.getElementById('fps').textContent = Math.floor(this.fps);
+            }
+
+            showGameOver() {
+                document.getElementById('finalScore').textContent = this.player.score;
+                document.getElementById('enemiesDefeated').textContent = this.enemies.filter(e => !e.isAlive()).length;
+                document.getElementById('gameOverScreen').style.display = 'block';
+            }
+
+            gameLoop = () => {
+                const now = Date.now();
+                const deltaTime = now - this.lastTime;
+                this.lastTime = now;
+
+                this.update(deltaTime);
+                this.render();
+                this.updateHUD();
+
+                this.frameCount++;
+                if (now - this.fpsUpdateTime > 1000) {
+                    this.fps = this.frameCount;
+                    this.frameCount = 0;
+                    this.fpsUpdateTime = now;
+                }
+
+                requestAnimationFrame(this.gameLoop);
+            };
+        }
+
+        // ==================== START GAME ====================
+        window.addEventListener('load', () => {
+            new Game();
+        });
+    </script>
+</body>
+</html>
